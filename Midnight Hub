@@ -3,6 +3,8 @@ local MainFrame = Instance.new("Frame")
 local Title = Instance.new("TextLabel")
 local StepsButton = Instance.new("TextButton")
 local GemsButton = Instance.new("TextButton")
+local YellowOrbButton = Instance.new("TextButton")
+local RedOrbButton = Instance.new("TextButton")
 local CloseButton = Instance.new("TextButton")
 
 -- GUI Setup
@@ -13,8 +15,8 @@ GUI.ResetOnSpawn = false
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = GUI
 MainFrame.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-MainFrame.Position = UDim2.new(0.5, -100, 0.5, -75)
-MainFrame.Size = UDim2.new(0, 200, 0, 150)
+MainFrame.Position = UDim2.new(0.5, -100, 0.5, -100)
+MainFrame.Size = UDim2.new(0, 200, 0, 200)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -29,7 +31,7 @@ Title.TextSize = 18
 StepsButton.Name = "StepsButton"
 StepsButton.Parent = MainFrame
 StepsButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-StepsButton.Position = UDim2.new(0.1, 0, 0.3, 0)
+StepsButton.Position = UDim2.new(0.1, 0, 0.2, 0)
 StepsButton.Size = UDim2.new(0.8, 0, 0, 30)
 StepsButton.Text = "Farm Steps"
 StepsButton.TextColor3 = Color3.fromRGB(0, 0, 0)
@@ -38,11 +40,29 @@ StepsButton.TextSize = 16
 GemsButton.Name = "GemsButton"
 GemsButton.Parent = MainFrame
 GemsButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-GemsButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+GemsButton.Position = UDim2.new(0.1, 0, 0.4, 0)
 GemsButton.Size = UDim2.new(0.8, 0, 0, 30)
 GemsButton.Text = "Farm Gems"
 GemsButton.TextColor3 = Color3.fromRGB(0, 0, 0)
 GemsButton.TextSize = 16
+
+YellowOrbButton.Name = "YellowOrbButton"
+YellowOrbButton.Parent = MainFrame
+YellowOrbButton.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+YellowOrbButton.Position = UDim2.new(0.1, 0, 0.6, 0)
+YellowOrbButton.Size = UDim2.new(0.8, 0, 0, 30)
+YellowOrbButton.Text = "Yellow Orb Farm"
+YellowOrbButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+YellowOrbButton.TextSize = 16
+
+RedOrbButton.Name = "RedOrbButton"
+RedOrbButton.Parent = MainFrame
+RedOrbButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+RedOrbButton.Position = UDim2.new(0.1, 0, 0.8, 0)
+RedOrbButton.Size = UDim2.new(0.8, 0, 0, 30)
+RedOrbButton.Text = "Red Desert Orb Farm"
+RedOrbButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+RedOrbButton.TextSize = 16
 
 CloseButton.Name = "CloseButton"
 CloseButton.Parent = MainFrame
@@ -52,6 +72,10 @@ CloseButton.Size = UDim2.new(0, 20, 0, 20)
 CloseButton.Text = "X"
 CloseButton.TextColor3 = Color3.fromRGB(255, 0, 0)
 CloseButton.TextSize = 20
+
+-- Variables
+local RedOrbFarmEnabled = false
+local YellowOrbFarmEnabled = false
 
 -- Button Functions
 StepsButton.MouseButton1Click:Connect(function()
@@ -68,6 +92,38 @@ GemsButton.MouseButton1Click:Connect(function()
     end
 end)
 
+YellowOrbButton.MouseButton1Click:Connect(function()
+    YellowOrbFarmEnabled = not YellowOrbFarmEnabled
+    
+    if YellowOrbFarmEnabled then
+        spawn(function()
+            while YellowOrbFarmEnabled do
+                for i = 1, 15 do
+                    game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", "Yellow Orb", "City")
+                end
+                wait()
+            end
+        end)
+    end
+end)
+
+RedOrbButton.MouseButton1Click:Connect(function()
+    RedOrbFarmEnabled = not RedOrbFarmEnabled
+    
+    if RedOrbFarmEnabled then
+        spawn(function()
+            while RedOrbFarmEnabled do
+                for i = 1, 7 do
+                    game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", "Red Orb", "Desert")
+                end
+                wait()
+            end
+        end)
+    end
+end)
+
 CloseButton.MouseButton1Click:Connect(function()
+    YellowOrbFarmEnabled = false
+    RedOrbFarmEnabled = false
     GUI:Destroy()
 end)

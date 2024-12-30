@@ -1,5 +1,20 @@
+-- Ensure the library is loaded correctly
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Chaosscripter/Riotscripter/refs/heads/main/Kavo%20Library%202"))()
+
+-- Make sure the library is loaded
+if not Library then
+    warn("Failed to load Kavo Library.")
+    return
+end
+
+-- Create the GUI window
 local Window = Library.CreateLib("Farming GUI", "Ocean")
+
+-- Check if the Window is created
+if not Window then
+    warn("Failed to create GUI window.")
+    return
+end
 
 -- Create main tab
 local MainTab = Window:NewTab("Farming")
@@ -11,7 +26,12 @@ FarmingSection:NewToggle("Yellow Orb Farm", "Farms Yellow Orbs in City", functio
     spawn(function()
         while enabled do
             for i = 1, 15 do
-                game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", "Yellow Orb", "City")
+                local success, err = pcall(function()
+                    game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", "Yellow Orb", "City")
+                end)
+                if not success then
+                    warn("Error firing event for Yellow Orb: " .. err)
+                end
             end
             wait()
         end
@@ -24,7 +44,12 @@ FarmingSection:NewToggle("Red Desert Orb Farm", "Farms Red Orbs in Desert", func
     spawn(function()
         while enabled do
             for i = 1, 7 do
-                game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", "Red Orb", "Desert")
+                local success, err = pcall(function()
+                    game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", "Red Orb", "Desert")
+                end)
+                if not success then
+                    warn("Error firing event for Red Orb: " .. err)
+                end
             end
             wait()
         end
@@ -35,7 +60,12 @@ end)
 FarmingSection:NewButton("Farm Steps (7500x)", "Collects 7500 Red Orbs in City", function()
     for i = 1, 7500 do
         local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-        Event:FireServer("collectOrb", "Red Orb", "City")
+        local success, err = pcall(function()
+            Event:FireServer("collectOrb", "Red Orb", "City")
+        end)
+        if not success then
+            warn("Error firing event for Red Orb (7500x): " .. err)
+        end
     end
 end)
 
@@ -43,6 +73,11 @@ end)
 FarmingSection:NewButton("Farm Gems (1000x)", "Collects 1000 Gems in City", function()
     for i = 1, 1000 do
         local Event = game:GetService("ReplicatedStorage").rEvents.orbEvent
-        Event:FireServer("collectOrb", "Gem", "City")
+        local success, err = pcall(function()
+            Event:FireServer("collectOrb", "Gem", "City")
+        end)
+        if not success then
+            warn("Error firing event for Gem: " .. err)
+        end
     end
 end)

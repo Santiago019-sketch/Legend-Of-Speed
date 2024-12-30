@@ -1,0 +1,109 @@
+-- Services
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Variables
+local Player = Players.LocalPlayer
+local collecting = false
+
+-- Create GUI
+local ScreenGui = Instance.new("ScreenGui")
+local MainFrame = Instance.new("Frame")
+local Title = Instance.new("TextLabel")
+local ToggleButton = Instance.new("TextButton")
+local StatusLabel = Instance.new("TextLabel")
+
+-- GUI Properties
+ScreenGui.Parent = Player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+MainFrame.Name = "OrbCollectorGUI"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0.8, 0, 0.5, -75)
+MainFrame.Size = UDim2.new(0, 200, 0, 150)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Title.Name = "Title"
+Title.Parent = MainFrame
+Title.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+Title.BorderSizePixel = 0
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.Font = Enum.Font.GothamBold
+Title.Text = "Orb Collector"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = MainFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+ToggleButton.Position = UDim2.new(0.5, -40, 0.5, -20)
+ToggleButton.Size = UDim2.new(0, 80, 0, 40)
+ToggleButton.Font = Enum.Font.GothamSemibold
+ToggleButton.Text = "Start"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14
+
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Parent = MainFrame
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Position = UDim2.new(0, 0, 0.8, 0)
+StatusLabel.Size = UDim2.new(1, 0, 0, 20)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.Text = "Status: Idle"
+StatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+StatusLabel.TextSize = 14
+
+-- Functions
+local function collectOrbs()
+    while collecting do
+        local args = {
+            [1] = "collectOrb",
+            [2] = "Gem",
+            [3] = "City"
+        }
+        
+        local success, error = pcall(function()
+            ReplicatedStorage.rEvents.orbEvent:FireServer(unpack(args))
+        end)
+        
+        if not success then
+            warn("Error collecting orb:", error)
+            StatusLabel.Text = "Status: Error"
+            collecting = false
+            ToggleButton.Text = "Start"
+            ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+            return
+        end
+        
+        RunService.PreRender:Wait()
+        RunService.Heartbeat:Wait()
+    end
+end
+
+-- Button Handler
+ToggleButton.MouseButton1Click:Connect(function()
+    collecting = not collecting
+    
+    if collecting then
+        ToggleButton.Text = "Stop"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+        StatusLabel.Text = "Status: Collecting"
+        collectOrbs()
+    else
+        ToggleButton.Text = "Start"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
+        StatusLabel.Text = "Status: Idle"
+    end
+end)
+
+-- Cleanup on script end
+local function cleanup()
+    collecting = false
+    ScreenGui:Destroy()
+end
+
+script.Destroyed:Connect(cleanup)

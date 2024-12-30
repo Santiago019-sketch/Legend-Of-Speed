@@ -10,21 +10,13 @@ local Window = Rayfield:CreateWindow({
     Name = "Farming GUI",
     LoadingTitle = "Loading Farming GUI",
     LoadingSubtitle = "By YourNameHere",
-    ConfigurationSaving = {
-        Enabled = true, -- Set to true if you want to save configuration
-    },
-    KeySystem = false, -- Set to true if you want to implement a key system
+    ConfigurationSaving = { Enabled = false }, -- Disable if not saving configuration
+    KeySystem = false, -- Disable key system
 })
 
--- Farming Tab
-local MainTab = Window:CreateTab("Farming", 4483362458) -- Icon ID from Roblox library
-
--- Farming Section
+-- Create Farming Tab and Section
+local MainTab = Window:CreateTab("Farming", 4483362458) -- Replace with desired icon ID
 local FarmingSection = MainTab:CreateSection("Orb Farming")
-
--- Variables to track toggle states
-local YellowOrbEnabled = false
-local RedOrbEnabled = false
 
 -- Function to handle farming orbs
 local function farmOrbs(orbType, location, count)
@@ -35,41 +27,32 @@ local function farmOrbs(orbType, location, count)
         if not success then
             warn("Error firing event for " .. orbType .. ": " .. err)
         end
-        wait(0.3) -- Add a short wait to prevent spamming requests
+        wait(0.3) -- Prevent spamming requests
     end
 end
 
--- Yellow Orb Farm Toggle
+-- Create Orb Farm Toggles
 FarmingSection:CreateToggle({
     Name = "Yellow Orb Farm",
     CurrentValue = false,
-    Flag = "YellowOrbFarm", -- Used for saving toggle state
     Callback = function(state)
-        YellowOrbEnabled = state
-        spawn(function()
-            while YellowOrbEnabled do
-                farmOrbs("Yellow Orb", "City", 15)
-            end
-        end)
+        while state do
+            farmOrbs("Yellow Orb", "City", 15)
+        end
     end,
 })
 
--- Red Desert Orb Farm Toggle
 FarmingSection:CreateToggle({
     Name = "Red Desert Orb Farm",
     CurrentValue = false,
-    Flag = "RedOrbFarm",
     Callback = function(state)
-        RedOrbEnabled = state
-        spawn(function()
-            while RedOrbEnabled do
-                farmOrbs("Red Orb", "Desert", 7)
-            end
-        end)
+        while state do
+            farmOrbs("Red Orb", "Desert", 7)
+        end
     end,
 })
 
--- Steps Farm Button
+-- Create Farm Buttons
 FarmingSection:CreateButton({
     Name = "Farm Steps (7500x)",
     Callback = function()
@@ -77,7 +60,6 @@ FarmingSection:CreateButton({
     end,
 })
 
--- Gems Farm Button
 FarmingSection:CreateButton({
     Name = "Farm Gems (1000x)",
     Callback = function()

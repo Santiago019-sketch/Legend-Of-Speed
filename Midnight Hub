@@ -10,19 +10,6 @@ local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
--- Platform Creation Function
-local function CreateFarmPlatform()
-    local platform = Instance.new("Part")
-    platform.Name = "FarmPlatform"
-    platform.Size = Vector3.new(10, 1, 10)
-    platform.Anchored = true
-    platform.CanCollide = true
-    platform.Transparency = 0.5
-    platform.Position = Vector3.new(0, 500, 0) -- High up in the sky
-    platform.Parent = workspace
-    return platform
-end
-
 -- UI Library
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
@@ -57,12 +44,14 @@ local SettingsTab = Window:MakeTab({
 
 -- Functions
 local function CollectOrbs(orbType, area)
-    local args = {
-        "collectOrb",
-        orbType,
-        area
-    }
-    ReplicatedStorage.rEvents.orbEvent:FireServer(unpack(args))
+    if ReplicatedStorage and ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("orbEvent") then
+        local args = {
+            [1] = "collectOrb",
+            [2] = orbType,
+            [3] = area
+        }
+        ReplicatedStorage.rEvents.orbEvent:FireServer(unpack(args))
+    end
 end
 
 local function AutoCollectAllOrbs()
@@ -71,7 +60,9 @@ local function AutoCollectAllOrbs()
     
     for _, area in ipairs(areas) do
         for _, orbType in ipairs(orbTypes) do
-            CollectOrbs(orbType, area)
+            task.spawn(function()
+                CollectOrbs(orbType, area)
+            end)
         end
     end
 end
@@ -79,16 +70,10 @@ end
 local function AutoCollectGems()
     local areas = {"City", "Snow City", "Magma City", "Desert"}
     for _, area in ipairs(areas) do
-        CollectOrbs("Gem", area)
+        task.spawn(function()
+            CollectOrbs("Gem", area)
+        end)
     end
-end
-
-local function BuyEgg(eggType)
-    local args = {
-        "purchaseEgg",
-        eggType
-    }
-    ReplicatedStorage.rEvents.eggEvent:FireServer(unpack(args))
 end
 
 -- Main Tab
@@ -102,7 +87,7 @@ FarmingSection:AddToggle({
     Default = false,
     Callback = function(Value)
         getgenv().AutoOrbs = Value
-        while getgenv().AutoOrbs and task.wait(0.1) do
+        while getgenv().AutoOrbs and task.wait() do
             pcall(AutoCollectAllOrbs)
         end
     end
@@ -114,45 +99,33 @@ FarmingSection:AddToggle({
     Default = false,
     Callback = function(Value)
         getgenv().AutoGems = Value
-        while getgenv().AutoGems and task.wait(0.1) do
+        while getgenv().AutoGems and task.wait() do
             pcall(AutoCollectGems)
         end
     end
 })
 
--- Safe Hoops Farm (Sky Platform Method)
+-- Safe Hoops Farm
 FarmingSection:AddToggle({
-    Name = "Safe Hoops Farm (Sky)",
+    Name = "Safe Hoops Farm",
     Default = false,
     Callback = function(Value)
-        getgenv().SafeHoopsSky = Value
+        getgenv().SafeHoops = Value
         
-        -- Platform handling
-        local farmPlatform = workspace:FindFirstChild("FarmPlatform")
-        if Value and not farmPlatform then
-            farmPlatform = CreateFarmPlatform()
-        end
-        
-        -- Teleport to platform
         if Value then
-            HumanoidRootPart.CFrame = CFrame.new(0, 505, 0) -- Slightly above platform
+            -- Teleport to safe farming position
+            HumanoidRootPart.CFrame = CFrame.new(0, 10000, 0)
         end
         
-        -- Start farming
-        while getgenv().SafeHoopsSky and task.wait(0.3) do
+        while getgenv().SafeHoops and task.wait(0.3) do
             pcall(function()
                 for _, hoop in pairs(workspace.Hoops:GetChildren()) do
-                    if hoop:IsA("BasePart") and getgenv().SafeHoopsSky then
+                    if hoop:IsA("BasePart") and getgenv().SafeHoops then
                         hoop.CFrame = HumanoidRootPart.CFrame
                         task.wait(0.3)
                     end
                 end
             end)
-        end
-        
-        -- Cleanup when disabled
-        if not Value and farmPlatform then
-            farmPlatform:Destroy()
         end
     end
 })
@@ -219,7 +192,11 @@ PetsSection:AddToggle({
         while getgenv().AutoBuyEgg and task.wait(1) do
             if getgenv().SelectedEgg then
                 pcall(function()
-                    BuyEgg(getgenv().SelectedEgg)
+                    local args = {
+                        [1] = "purchaseEgg",
+                        [2] = getgenv().SelectedEgg
+                    }
+                    ReplicatedStorage.rEvents.eggEvent:FireServer(unpack(args))
                 end)
             end
         end
@@ -234,8 +211,6 @@ local SettingsSection = SettingsTab:AddSection({
 SettingsSection:AddButton({
     Name = "Destroy GUI",
     Callback = function()
-        local platform = workspace:FindFirstChild("FarmPlatform")
-        if platform then platform:Destroy() end
         OrionLib:Destroy()
     end
 })

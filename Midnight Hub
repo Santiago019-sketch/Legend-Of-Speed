@@ -4,6 +4,18 @@ local Main = Win:Tab("Main")
 local Autofarm = Win:Tab("Autofarm")
 local Credits = Win:Tab("Credits")
 
+-- GUI toggle setup
+local guiVisible = true
+local toggleKey = Enum.KeyCode.RightShift -- Change this key if needed
+
+game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == toggleKey then
+        guiVisible = not guiVisible
+        Win.Frame.Visible = guiVisible
+    end
+end)
+
 if not game.Workspace:FindFirstChild("MidnightHubPart") then
     local MidnightHubPart = Instance.new("Part")
     MidnightHubPart.Name = "MidnightHubPart"
@@ -28,10 +40,11 @@ Autofarm:Toggle("Auto Steps", false, function(t)
         if getgenv().Autostep then
             pcall(function()
                 for i = 1, 20 do
-                    local args = {"collectOrb", "Red Orb", "City"}
-                    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
-                    args[2] = "Blue Orb"
-                    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+                    local orbs = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
+                    for _, orb in ipairs(orbs) do
+                        local args = {"collectOrb", orb, "City"}
+                        game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+                    end
                 end
             end)
         end
@@ -80,16 +93,6 @@ spawn(function()
                     v.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                     wait(0.3)
                 end
-            end)
-        end
-    end
-end)
-
-spawn(function()
-    while wait(0.3) do
-        if HoopsFarm then
-            pcall(function()
-                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-547.52026, 2893.19995, 327.647003)
             end)
         end
     end

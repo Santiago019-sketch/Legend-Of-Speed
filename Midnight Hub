@@ -30,13 +30,7 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local AutofarmTab = Window:MakeTab({
-    Name = "Autofarm",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-local CrystalTab = Window:MakeTab({
+local CrystalsTab = Window:MakeTab({
     Name = "Crystals",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
@@ -48,57 +42,102 @@ local SettingsTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Enhanced Functions
+-- Functions
 local function CollectOrbs(orbType, area)
-    if ReplicatedStorage and ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("orbEvent") then
-        local args = {
-            [1] = "collectOrb",
-            [2] = orbType,
-            [3] = area
-        }
-        ReplicatedStorage.rEvents.orbEvent:FireServer(unpack(args))
-    end
+    local args = {
+        "collectOrb",
+        orbType,
+        area
+    }
+    ReplicatedStorage.rEvents.orbEvent:FireServer(unpack(args))
 end
 
 local function AutoCollectAllOrbs()
-    local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb", "Gem"}
+    local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
     local areas = {"City", "Snow City", "Magma City", "Desert"}
     
     for _, area in ipairs(areas) do
         for _, orbType in ipairs(orbTypes) do
-            task.spawn(function()
-                CollectOrbs(orbType, area)
-            end)
+            CollectOrbs(orbType, area)
         end
     end
 end
 
--- Crystal Opening Function
-local function OpenCrystal(crystalType)
-    local args = {
-        [1] = "openCrystal",
-        [2] = crystalType
-    }
-    ReplicatedStorage.rEvents.openCrystalRemote:InvokeServer(unpack(args))
+local function AutoCollectGems()
+    local areas = {"City", "Snow City", "Magma City", "Desert"}
+    for _, area in ipairs(areas) do
+        CollectOrbs("Gem", area)
+    end
 end
 
 -- Main Tab
-local MainSection = MainTab:AddSection({
-    Name = "Main Features"
+local FarmingSection = MainTab:AddSection({
+    Name = "Farming"
 })
 
-MainSection:AddToggle({
-    Name = "Auto Collect All",
+-- Auto Collect Orbs
+FarmingSection:AddToggle({
+    Name = "Auto Collect All Orbs",
     Default = false,
     Callback = function(Value)
-        getgenv().AutoCollectAll = Value
-        while getgenv().AutoCollectAll and task.wait() do
+        getgenv().AutoOrbs = Value
+        while getgenv().AutoOrbs and task.wait(0.1) do
             pcall(AutoCollectAllOrbs)
         end
     end
 })
 
-MainSection:AddToggle({
+-- Auto Collect Gems
+FarmingSection:AddToggle({
+    Name = "Auto Collect Gems",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoGems = Value
+        while getgenv().AutoGems and task.wait(0.1) do
+            pcall(AutoCollectGems)
+        end
+    end
+})
+
+-- Safe Auto Hoops
+FarmingSection:AddToggle({
+    Name = "Safe Auto Hoops",
+    Default = false,
+    Callback = function(Value)
+        getgenv().SafeAutoHoops = Value
+        while getgenv().SafeAutoHoops and task.wait(0.3) do
+            pcall(function()
+                for _, hoop in pairs(workspace.Hoops:GetChildren()) do
+                    if hoop:IsA("BasePart") then
+                        hoop.CFrame = HumanoidRootPart.CFrame
+                        task.wait(0.3)
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- Fast Auto Hoops
+FarmingSection:AddToggle({
+    Name = "Fast Auto Hoops",
+    Default = false,
+    Callback = function(Value)
+        getgenv().FastAutoHoops = Value
+        while getgenv().FastAutoHoops and task.wait(0.1) do
+            pcall(function()
+                for _, hoop in pairs(workspace.Hoops:GetChildren()) do
+                    if hoop:IsA("BasePart") then
+                        hoop.CFrame = HumanoidRootPart.CFrame
+                    end
+                end
+            end)
+        end
+    end
+})
+
+-- Auto Rebirth
+FarmingSection:AddToggle({
     Name = "Auto Rebirth",
     Default = false,
     Callback = function(Value)
@@ -111,98 +150,72 @@ MainSection:AddToggle({
     end
 })
 
--- Autofarm Tab
-local AutofarmSection = AutofarmTab:AddSection({
-    Name = "Farming Features"
+-- Crystals Tab
+local CrystalsSection = CrystalsTab:AddSection({
+    Name = "Auto Crystal Opening"
 })
 
-AutofarmSection:AddToggle({
-    Name = "Safe Hoops Farm",
+-- City Crystals
+CrystalsSection:AddToggle({
+    Name = "Auto Open City Crystal",
     Default = false,
     Callback = function(Value)
-        getgenv().SafeHoops = Value
-        
-        if Value then
-            HumanoidRootPart.CFrame = CFrame.new(0, 10000, 0)
-        end
-        
-        while getgenv().SafeHoops and task.wait(0.3) do
+        getgenv().AutoCityCrystal = Value
+        while getgenv().AutoCityCrystal and task.wait(1) do
             pcall(function()
-                for _, hoop in pairs(workspace.Hoops:GetChildren()) do
-                    if hoop:IsA("BasePart") and getgenv().SafeHoops then
-                        hoop.CFrame = HumanoidRootPart.CFrame
-                        task.wait(0.3)
-                    end
-                end
+                ReplicatedStorage.rEvents.openCrystalEvent:FireServer("openCrystal", "City Crystal")
             end)
         end
     end
 })
 
-AutofarmSection:AddToggle({
-    Name = "Fast Hoops Farm",
+CrystalsSection:AddToggle({
+    Name = "Auto Open Snow Crystal",
     Default = false,
     Callback = function(Value)
-        getgenv().FastHoops = Value
-        while getgenv().FastHoops and task.wait(0.1) do
+        getgenv().AutoSnowCrystal = Value
+        while getgenv().AutoSnowCrystal and task.wait(1) do
             pcall(function()
-                for _, hoop in pairs(workspace.Hoops:GetChildren()) do
-                    if hoop:IsA("BasePart") then
-                        hoop.CFrame = HumanoidRootPart.CFrame
-                    end
-                end
+                ReplicatedStorage.rEvents.openCrystalEvent:FireServer("openCrystal", "Snow Crystal")
             end)
         end
     end
 })
 
--- Crystal Tab
-local CrystalSection = CrystalTab:AddSection({
-    Name = "Crystal Opening"
-})
-
-local crystalTypes = {
-    "Red Crystal",
-    "Blue Crystal",
-    "Purple Crystal",
-    "Lightning Crystal",
-    "Dark Crystal",
-    "Inferno Crystal",
-    "Rainbow Crystal",
-    "Space Crystal"
-}
-
-CrystalSection:AddDropdown({
-    Name = "Select Crystal",
-    Default = "Blue Crystal",
-    Options = crystalTypes,
-    Callback = function(Value)
-        getgenv().SelectedCrystal = Value
-    end
-})
-
-CrystalSection:AddToggle({
-    Name = "Auto Open Selected Crystal",
+CrystalsSection:AddToggle({
+    Name = "Auto Open Inferno Crystal",
     Default = false,
     Callback = function(Value)
-        getgenv().AutoOpenCrystal = Value
-        while getgenv().AutoOpenCrystal and task.wait(1) do
-            if getgenv().SelectedCrystal then
-                pcall(function()
-                    OpenCrystal(getgenv().SelectedCrystal)
-                end)
-            end
+        getgenv().AutoInfernoCrystal = Value
+        while getgenv().AutoInfernoCrystal and task.wait(1) do
+            pcall(function()
+                ReplicatedStorage.rEvents.openCrystalEvent:FireServer("openCrystal", "Inferno Crystal")
+            end)
         end
     end
 })
 
-CrystalSection:AddButton({
-    Name = "Open All Crystal Types Once",
-    Callback = function()
-        for _, crystalType in ipairs(crystalTypes) do
+CrystalsSection:AddToggle({
+    Name = "Auto Open Desert Crystal",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoDesertCrystal = Value
+        while getgenv().AutoDesertCrystal and task.wait(1) do
             pcall(function()
-                OpenCrystal(crystalType)
-                task.wait(0.5)
+                ReplicatedStorage.rEvents.openCrystalEvent:FireServer("openCrystal", "Desert Crystal")
+            end)
+        end
+    end
+})
+
+CrystalsSection:AddToggle({
+    Name = "Auto Open Void Crystal",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoVoidCrystal = Value
+        while getgenv().AutoVoidCrystal and task.wait(1) do
+            pcall(function()
+                ReplicatedStorage.rEvents.openCrystalEvent:FireServer("openCrystal", "Void Crystal")
             end)
         end
     end

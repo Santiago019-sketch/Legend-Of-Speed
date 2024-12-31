@@ -1,24 +1,73 @@
--- Load Tokyo UI Library
-local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua'))()
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
 -- Create Window
-local Window = Library:Window("Midnight Hub", "Speed of Legends", "#000000")
+local Window = OrionLib:MakeWindow({
+    Name = "Midnight Hub | Speed of Legends", 
+    HidePremium = false,
+    SaveConfig = true, 
+    IntroEnabled = true,
+    IntroText = "Midnight Hub",
+    ConfigFolder = "MidnightHub"
+})
 
--- Create Tabs
-local MainTab = Window:Tab("Main")
-local AutoTab = Window:Tab("Auto Farm")
-local MiscTab = Window:Tab("Misc")
+-- Tabs
+local MainTab = Window:MakeTab({
+    Name = "Main",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Main Features
-MainTab:Slider("WalkSpeed", 16, 500, 16, function(v)
-    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
-end)
+local AutofarmTab = Window:MakeTab({
+    Name = "Autofarm",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
-MainTab:Slider("JumpPower", 50, 500, 50, function(v)
-    game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
-end)
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
--- Auto Farm Features
+-- Main Section
+local MainSection = MainTab:AddSection({
+    Name = "Character Modifications"
+})
+
+-- WalkSpeed Slider
+MainSection:AddSlider({
+    Name = "WalkSpeed",
+    Min = 16,
+    Max = 500,
+    Default = 16,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
+    end    
+})
+
+-- JumpPower Slider
+MainSection:AddSlider({
+    Name = "JumpPower",
+    Min = 50,
+    Max = 500,
+    Default = 50,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Power",
+    Callback = function(Value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
+    end    
+})
+
+-- Autofarm Section
+local AutofarmSection = AutofarmTab:AddSection({
+    Name = "Orb Collection"
+})
+
+-- Helper function for orb collection
 local function collectOrb(orbType, location)
     local args = {
         "collectOrb",
@@ -28,10 +77,13 @@ local function collectOrb(orbType, location)
     game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
 end
 
-AutoTab:Toggle("Auto Collect All Orbs", false, function(t)
-    getgenv().AutoCollectOrbs = t
-    while wait(0.1) do
-        if getgenv().AutoCollectOrbs then
+-- Auto Collect All Orbs
+AutofarmSection:AddToggle({
+    Name = "Auto Collect All Orbs",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoCollectOrbs = Value
+        while wait(0.1) and getgenv().AutoCollectOrbs do
             pcall(function()
                 local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
                 local locations = {"City", "Desert", "Magma City"}
@@ -43,14 +95,17 @@ AutoTab:Toggle("Auto Collect All Orbs", false, function(t)
                 end
             end)
         end
-    end
-end)
+    end    
+})
 
-AutoTab:Toggle("Auto Collect Gems", false, function(t)
-    getgenv().AutoCollectGems = t
-    spawn(function()
-        while wait(0.1) do
-            if getgenv().AutoCollectGems then
+-- Auto Collect Gems
+AutofarmSection:AddToggle({
+    Name = "Auto Collect Gems",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoCollectGems = Value
+        spawn(function()
+            while wait(0.1) and getgenv().AutoCollectGems do
                 pcall(function()
                     local locations = {"City", "Desert", "Magma City"}
                     for _, location in ipairs(locations) do
@@ -58,28 +113,39 @@ AutoTab:Toggle("Auto Collect Gems", false, function(t)
                     end
                 end)
             end
-        end
-    end)
-end)
+        end)
+    end    
+})
 
-AutoTab:Toggle("Fast Hoops Farm", false, function(t)
-    getgenv().FastHoopsFarm = t
-    while wait() do
-        if getgenv().FastHoopsFarm then
+-- Hoops Section
+local HoopsSection = AutofarmTab:AddSection({
+    Name = "Hoops Farm"
+})
+
+-- Fast Hoops Farm
+HoopsSection:AddToggle({
+    Name = "Fast Hoops Farm",
+    Default = false,
+    Callback = function(Value)
+        getgenv().FastHoopsFarm = Value
+        while wait() and getgenv().FastHoopsFarm do
             pcall(function()
                 for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
                     hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                 end
             end)
         end
-    end
-end)
+    end    
+})
 
-AutoTab:Toggle("Safe Hoops Farm", false, function(t)
-    getgenv().SafeHoopsFarm = t
-    spawn(function()
-        while wait(0.3) do
-            if getgenv().SafeHoopsFarm then
+-- Safe Hoops Farm
+HoopsSection:AddToggle({
+    Name = "Safe Hoops Farm",
+    Default = false,
+    Callback = function(Value)
+        getgenv().SafeHoopsFarm = Value
+        spawn(function()
+            while wait(0.3) and getgenv().SafeHoopsFarm do
                 pcall(function()
                     for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
                         hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -87,80 +153,146 @@ AutoTab:Toggle("Safe Hoops Farm", false, function(t)
                     end
                 end)
             end
-        end
-    end)
-end)
+        end)
+    end    
+})
 
-AutoTab:Toggle("Auto Rebirth", false, function(t)
-    getgenv().AutoRebirth = t
-    spawn(function()
-        while wait(0.5) do
-            if getgenv().AutoRebirth then
+-- Auto Rebirth Section
+local RebirthSection = AutofarmTab:AddSection({
+    Name = "Rebirth"
+})
+
+-- Auto Rebirth
+RebirthSection:AddToggle({
+    Name = "Auto Rebirth",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoRebirth = Value
+        spawn(function()
+            while wait(0.5) and getgenv().AutoRebirth do
                 pcall(function()
                     game:GetService("ReplicatedStorage").rEvents.rebirthEvent:FireServer("rebirthRequest")
                 end)
             end
-        end
-    end)
-end)
-
-AutoTab:Button("Collect All Chests", function()
-    local chestTypes = {
-        {"groupRewards"},
-        {"Enchanted Chest"},
-        {workspace.rewardChests.rewardChest}
-    }
-    
-    for _, chest in ipairs(chestTypes) do
-        pcall(function()
-            if chest[1] == "groupRewards" then
-                game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(chest))
-            elseif chest[1] == "Enchanted Chest" then
-                game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(chest))
-            else
-                game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(chest))
-            end
         end)
-        wait(0.1)
-    end
-end)
+    end    
+})
 
--- Misc Features
-MiscTab:Button("Join Discord", function()
-    setclipboard("https://discord.gg/midnight-hub")
-    local req = (syn and syn.request) or (http and http.request) or http_request
-    if req then
-        req({
-            Url = 'http://127.0.0.1:6463/rpc?v=1',
-            Method = 'POST',
-            Headers = {
-                ['Content-Type'] = 'application/json',
-                Origin = 'https://discord.com'
-            },
-            Body = game:GetService('HttpService'):JSONEncode({
-                cmd = 'INVITE_BROWSER',
-                nonce = game:GetService('HttpService'):GenerateGUID(false),
-                args = {code = 'midnight-hub'}
-            })
+-- Chest Collection
+local ChestSection = AutofarmTab:AddSection({
+    Name = "Chest Collection"
+})
+
+ChestSection:AddButton({
+    Name = "Collect All Chests",
+    Callback = function()
+        local chestTypes = {
+            {"groupRewards"},
+            {"Enchanted Chest"},
+            {workspace.rewardChests.rewardChest}
+        }
+        
+        for _, chest in ipairs(chestTypes) do
+            pcall(function()
+                if chest[1] == "groupRewards" then
+                    game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(chest))
+                elseif chest[1] == "Enchanted Chest" then
+                    game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(chest))
+                else
+                    game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(chest))
+                end
+            end)
+            wait(0.1)
+        end
+        OrionLib:MakeNotification({
+            Name = "Chest Collection",
+            Content = "All available chests collected!",
+            Image = "rbxassetid://4483345998",
+            Time = 5
         })
+    end    
+})
+
+-- Misc Section
+local MiscSection = MiscTab:AddSection({
+    Name = "Links & Credits"
+})
+
+MiscSection:AddButton({
+    Name = "Join Discord",
+    Callback = function()
+        setclipboard("https://discord.gg/midnight-hub")
+        OrionLib:MakeNotification({
+            Name = "Discord",
+            Content = "Discord link copied to clipboard!",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+        local req = (syn and syn.request) or (http and http.request) or http_request
+        if req then
+            req({
+                Url = 'http://127.0.0.1:6463/rpc?v=1',
+                Method = 'POST',
+                Headers = {
+                    ['Content-Type'] = 'application/json',
+                    Origin = 'https://discord.com'
+                },
+                Body = game:GetService('HttpService'):JSONEncode({
+                    cmd = 'INVITE_BROWSER',
+                    nonce = game:GetService('HttpService'):GenerateGUID(false),
+                    args = {code = 'midnight-hub'}
+                })
+            })
+        end
+    end    
+})
+
+MiscSection:AddButton({
+    Name = "Copy Discord Link",
+    Callback = function()
+        setclipboard("https://discord.gg/midnight-hub")
+        OrionLib:MakeNotification({
+            Name = "Discord",
+            Content = "Discord link copied to clipboard!",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+    end    
+})
+
+local CreditsSection = MiscTab:AddSection({
+    Name = "Credits"
+})
+
+CreditsSection:AddLabel("Lead Developers: Midnight Dev Team")
+CreditsSection:AddLabel("UI Designer: Midnight UI Team")
+
+-- Settings Section
+local SettingsSection = MiscTab:AddSection({
+    Name = "Settings"
+})
+
+SettingsSection:AddButton({
+    Name = "Destroy GUI",
+    Callback = function()
+        OrionLib:Destroy()
+    end    
+})
+
+SettingsSection:AddButton({
+    Name = "Rejoin Game",
+    Callback = function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+    end    
+})
+
+-- Initialize
+OrionLib:Init()
+
+-- Set default toggle key to Right Control
+local UIS = game:GetService("UserInputService")
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        OrionLib:ToggleUI()
     end
 end)
-
-MiscTab:Button("Lead Developers: Midnight Dev Team", function()
-    setclipboard("https://discord.gg/midnight-hub")
-end)
-
-MiscTab:Button("UI Designer: Midnight UI Team", function()
-    setclipboard("https://discord.gg/midnight-hub")
-end)
-
-MiscTab:Button("Destroy GUI", function()
-    Library:Destroy()
-end)
-
-MiscTab:Button("Rejoin Game", function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
-end)
-
--- Set Keybind
-Library:Keybind("RightControl")

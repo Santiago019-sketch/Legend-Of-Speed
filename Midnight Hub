@@ -18,6 +18,10 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("Farming", 4483362458) -- Replace with desired icon ID
 local FarmingSection = MainTab:CreateSection("Orb Farming")
 
+-- Variables to control toggles
+local isYellowOrbFarming = false
+local isRedOrbFarming = false
+
 -- Function to handle farming orbs
 local function farmOrbs(orbType, location, count)
     for i = 1, count do
@@ -36,9 +40,13 @@ FarmingSection:CreateToggle({
     Name = "Yellow Orb Farm",
     CurrentValue = false,
     Callback = function(state)
-        while state do
-            farmOrbs("Yellow Orb", "City", 15)
-        end
+        isYellowOrbFarming = state
+        spawn(function()
+            while isYellowOrbFarming do
+                farmOrbs("Yellow Orb", "City", 15)
+                wait(1) -- Add delay to prevent potential overload
+            end
+        end)
     end,
 })
 
@@ -46,9 +54,13 @@ FarmingSection:CreateToggle({
     Name = "Red Desert Orb Farm",
     CurrentValue = false,
     Callback = function(state)
-        while state do
-            farmOrbs("Red Orb", "Desert", 7)
-        end
+        isRedOrbFarming = state
+        spawn(function()
+            while isRedOrbFarming do
+                farmOrbs("Red Orb", "Desert", 7)
+                wait(1) -- Add delay to prevent potential overload
+            end
+        end)
     end,
 })
 

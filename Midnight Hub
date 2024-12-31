@@ -36,6 +36,12 @@ local PetsTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local ChestsTab = Window:MakeTab({
+    Name = "Chests & Crystals",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
 local SettingsTab = Window:MakeTab({
     Name = "Settings",
     Icon = "rbxassetid://4483345998",
@@ -76,6 +82,37 @@ local function AutoCollectGems()
     end
 end
 
+-- New Remote Functions
+local function TravelToArea()
+    local args = {
+        [1] = "travelToArea",
+        [2] = workspace.areaCircles.areaCircle
+    }
+    ReplicatedStorage.rEvents.areaTravelRemote:InvokeServer(unpack(args))
+end
+
+local function CollectRewardChest()
+    local args = {
+        [1] = workspace.rewardChests.rewardChest
+    }
+    ReplicatedStorage.rEvents.collectCourseChestRemote:InvokeServer(unpack(args))
+end
+
+local function OpenCrystal(crystalType)
+    local args = {
+        [1] = "openCrystal",
+        [2] = crystalType
+    }
+    ReplicatedStorage.rEvents.openCrystalRemote:InvokeServer(unpack(args))
+end
+
+local function CheckChest(chestType)
+    local args = {
+        [1] = chestType
+    }
+    ReplicatedStorage.rEvents.checkChestRemote:InvokeServer(unpack(args))
+end
+
 -- Main Tab
 local FarmingSection = MainTab:AddSection({
     Name = "Farming"
@@ -113,7 +150,6 @@ FarmingSection:AddToggle({
         getgenv().SafeHoops = Value
         
         if Value then
-            -- Teleport to safe farming position
             HumanoidRootPart.CFrame = CFrame.new(0, 10000, 0)
         end
         
@@ -158,6 +194,54 @@ FarmingSection:AddToggle({
             pcall(function()
                 ReplicatedStorage.rEvents.rebirthEvent:FireServer("rebirthRequest")
             end)
+        end
+    end
+})
+
+-- Chests & Crystals Tab
+local ChestsSection = ChestsTab:AddSection({
+    Name = "Chests and Crystals"
+})
+
+-- Auto Check Chests
+ChestsSection:AddToggle({
+    Name = "Auto Check Chests",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoCheckChests = Value
+        while getgenv().AutoCheckChests and task.wait(1) do
+            pcall(function()
+                CheckChest("Magma Chest")
+                CheckChest("Enchanted Chest")
+                CheckChest("Golden Chest")
+            end)
+        end
+    end
+})
+
+-- Auto Open Crystals
+ChestsSection:AddToggle({
+    Name = "Auto Open Crystals",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoOpenCrystals = Value
+        while getgenv().AutoOpenCrystals and task.wait(1) do
+            pcall(function()
+                OpenCrystal("Lightning Crystal")
+                OpenCrystal("Blue Crystal")
+            end)
+        end
+    end
+})
+
+-- Auto Collect Reward Chests
+ChestsSection:AddToggle({
+    Name = "Auto Collect Reward Chests",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoCollectRewards = Value
+        while getgenv().AutoCollectRewards and task.wait(1) do
+            pcall(CollectRewardChest)
         end
     end
 })

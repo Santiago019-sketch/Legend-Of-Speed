@@ -1,13 +1,9 @@
--- Load the GUI library from the provided script
-local VLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Chaosscripter/Riotscripter/main/Dark%20Dex%20V7"))()
+local VLib = loadstring(game:HttpGet("https://gitlab.com/L1ZOT/test-project/-/raw/main/PJM-GUI"))()
 local Win = VLib:Window("Midnight Hub", "Speed of Legends")
-
--- Tabs
 local Main = Win:Tab("Main")
 local Autofarm = Win:Tab("Autofarm")
 local Credits = Win:Tab("Credits")
 
--- Create a marker part if it doesn't exist
 if not game.Workspace:FindFirstChild("MidnightHubPart") then
     local MidnightHubPart = Instance.new("Part")
     MidnightHubPart.Name = "MidnightHubPart"
@@ -18,17 +14,14 @@ if not game.Workspace:FindFirstChild("MidnightHubPart") then
     MidnightHubPart.Position = Vector3.new(-543.452, 2873.2, 324.647)
 end
 
--- WalkSpeed Slider
 Main:Slider("WalkSpeed", 0, 250, 16, function(v)
     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
 end)
 
--- JumpPower Slider
 Main:Slider("JumpPower", 0, 250, 50, function(v)
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
 end)
 
--- Autofarm Toggles and Functions
 Autofarm:Toggle("Auto Steps", false, function(t)
     getgenv().Autostep = t
     while wait() do
@@ -92,6 +85,16 @@ spawn(function()
     end
 end)
 
+spawn(function()
+    while wait(0.3) do
+        if HoopsFarm then
+            pcall(function()
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-547.52026, 2893.19995, 327.647003)
+            end)
+        end
+    end
+end)
+
 Autofarm:Toggle("AutoRebirth", false, function(t)
     spawn(function()
         getgenv().AutoRebirth = t
@@ -118,7 +121,6 @@ Autofarm:Button("Collect Chests", function()
     game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(args))
 end)
 
--- Credits Section
 Credits:Button("Lead Developers: Midnight Dev Team", function()
     setclipboard("https://discord.gg/midnight-hub")
 end)

@@ -1,44 +1,22 @@
--- Load Rayfield UI Library
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Load Tokyo UI Library
+local Library = loadstring(game:HttpGet('https://raw.githubusercontent.com/drillygzzly/Roblox-UI-Libs/main/1%20Tokyo%20Lib%20(FIXED)/Tokyo%20Lib%20Source.lua'))()
 
 -- Create Window
-local Window = Rayfield:CreateWindow({
-   Name = "Midnight Hub",
-   LoadingTitle = "Midnight Hub",
-   LoadingSubtitle = "by Midnight Team",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "MidnightHub",
-      FileName = "Config"
-   },
-   KeySystem = false
-})
+local Window = Library:Window("Midnight Hub", "Speed of Legends", "#000000")
 
 -- Create Tabs
-local MainTab = Window:CreateTab("Main", 4483345998)
-local AutoTab = Window:CreateTab("Auto", 4483345998)
-local MiscTab = Window:CreateTab("Misc", 4483345998)
+local MainTab = Window:Tab("Main")
+local AutoTab = Window:Tab("Auto Farm")
+local MiscTab = Window:Tab("Misc")
 
 -- Main Features
-MainTab:CreateSlider({
-   Name = "WalkSpeed",
-   Range = {16, 500},
-   Increment = 1,
-   CurrentValue = 16,
-   Callback = function(Value)
-       game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-   end,
-})
+MainTab:Slider("WalkSpeed", 16, 500, 16, function(v)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+end)
 
-MainTab:CreateSlider({
-   Name = "JumpPower",
-   Range = {50, 500},
-   Increment = 1,
-   CurrentValue = 50,
-   Callback = function(Value)
-       game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-   end,
-})
+MainTab:Slider("JumpPower", 50, 500, 50, function(v)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
+end)
 
 -- Auto Farm Features
 local function collectOrb(orbType, location)
@@ -50,12 +28,10 @@ local function collectOrb(orbType, location)
     game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
 end
 
-AutoTab:CreateToggle({
-    Name = "Auto Collect All Orbs",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().AutoCollectOrbs = Value
-        while wait(0.1) and getgenv().AutoCollectOrbs do
+AutoTab:Toggle("Auto Collect All Orbs", false, function(t)
+    getgenv().AutoCollectOrbs = t
+    while wait(0.1) do
+        if getgenv().AutoCollectOrbs then
             pcall(function()
                 local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
                 local locations = {"City", "Desert", "Magma City"}
@@ -67,16 +43,14 @@ AutoTab:CreateToggle({
                 end
             end)
         end
-    end,
-})
+    end
+end)
 
-AutoTab:CreateToggle({
-    Name = "Auto Collect Gems",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().AutoCollectGems = Value
-        spawn(function()
-            while wait(0.1) and getgenv().AutoCollectGems do
+AutoTab:Toggle("Auto Collect Gems", false, function(t)
+    getgenv().AutoCollectGems = t
+    spawn(function()
+        while wait(0.1) do
+            if getgenv().AutoCollectGems then
                 pcall(function()
                     local locations = {"City", "Desert", "Magma City"}
                     for _, location in ipairs(locations) do
@@ -84,32 +58,28 @@ AutoTab:CreateToggle({
                     end
                 end)
             end
-        end)
-    end,
-})
+        end
+    end)
+end)
 
-AutoTab:CreateToggle({
-    Name = "Fast Hoops Farm",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().FastHoopsFarm = Value
-        while wait() and getgenv().FastHoopsFarm do
+AutoTab:Toggle("Fast Hoops Farm", false, function(t)
+    getgenv().FastHoopsFarm = t
+    while wait() do
+        if getgenv().FastHoopsFarm then
             pcall(function()
                 for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
                     hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                 end
             end)
         end
-    end,
-})
+    end
+end)
 
-AutoTab:CreateToggle({
-    Name = "Safe Hoops Farm",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().SafeHoopsFarm = Value
-        spawn(function()
-            while wait(0.3) and getgenv().SafeHoopsFarm do
+AutoTab:Toggle("Safe Hoops Farm", false, function(t)
+    getgenv().SafeHoopsFarm = t
+    spawn(function()
+        while wait(0.3) do
+            if getgenv().SafeHoopsFarm then
                 pcall(function()
                     for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
                         hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
@@ -117,86 +87,80 @@ AutoTab:CreateToggle({
                     end
                 end)
             end
-        end)
-    end,
-})
+        end
+    end)
+end)
 
-AutoTab:CreateToggle({
-    Name = "Auto Rebirth",
-    CurrentValue = false,
-    Callback = function(Value)
-        getgenv().AutoRebirth = Value
-        spawn(function()
-            while wait(0.5) and getgenv().AutoRebirth do
+AutoTab:Toggle("Auto Rebirth", false, function(t)
+    getgenv().AutoRebirth = t
+    spawn(function()
+        while wait(0.5) do
+            if getgenv().AutoRebirth then
                 pcall(function()
                     game:GetService("ReplicatedStorage").rEvents.rebirthEvent:FireServer("rebirthRequest")
                 end)
             end
-        end)
-    end,
-})
-
-AutoTab:CreateButton({
-    Name = "Collect All Chests",
-    Callback = function()
-        local chestTypes = {
-            {"groupRewards"},
-            {"Enchanted Chest"},
-            {workspace.rewardChests.rewardChest}
-        }
-        
-        for _, chest in ipairs(chestTypes) do
-            pcall(function()
-                if chest[1] == "groupRewards" then
-                    game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(chest))
-                elseif chest[1] == "Enchanted Chest" then
-                    game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(chest))
-                else
-                    game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(chest))
-                end
-            end)
-            wait(0.1)
         end
-    end,
-})
+    end)
+end)
+
+AutoTab:Button("Collect All Chests", function()
+    local chestTypes = {
+        {"groupRewards"},
+        {"Enchanted Chest"},
+        {workspace.rewardChests.rewardChest}
+    }
+    
+    for _, chest in ipairs(chestTypes) do
+        pcall(function()
+            if chest[1] == "groupRewards" then
+                game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(chest))
+            elseif chest[1] == "Enchanted Chest" then
+                game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(chest))
+            else
+                game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(chest))
+            end
+        end)
+        wait(0.1)
+    end
+end)
 
 -- Misc Features
-MiscTab:CreateButton({
-    Name = "Join Discord",
-    Callback = function()
-        setclipboard("https://discord.gg/midnight-hub")
-        local req = (syn and syn.request) or (http and http.request) or http_request
-        if req then
-            req({
-                Url = 'http://127.0.0.1:6463/rpc?v=1',
-                Method = 'POST',
-                Headers = {
-                    ['Content-Type'] = 'application/json',
-                    Origin = 'https://discord.com'
-                },
-                Body = game:GetService('HttpService'):JSONEncode({
-                    cmd = 'INVITE_BROWSER',
-                    nonce = game:GetService('HttpService'):GenerateGUID(false),
-                    args = {code = 'midnight-hub'}
-                })
+MiscTab:Button("Join Discord", function()
+    setclipboard("https://discord.gg/midnight-hub")
+    local req = (syn and syn.request) or (http and http.request) or http_request
+    if req then
+        req({
+            Url = 'http://127.0.0.1:6463/rpc?v=1',
+            Method = 'POST',
+            Headers = {
+                ['Content-Type'] = 'application/json',
+                Origin = 'https://discord.com'
+            },
+            Body = game:GetService('HttpService'):JSONEncode({
+                cmd = 'INVITE_BROWSER',
+                nonce = game:GetService('HttpService'):GenerateGUID(false),
+                args = {code = 'midnight-hub'}
             })
-        end
-    end,
-})
+        })
+    end
+end)
 
-MiscTab:CreateButton({
-    Name = "Destroy GUI",
-    Callback = function()
-        Rayfield:Destroy()
-    end,
-})
+MiscTab:Button("Lead Developers: Midnight Dev Team", function()
+    setclipboard("https://discord.gg/midnight-hub")
+end)
 
-MiscTab:CreateButton({
-    Name = "Rejoin Game",
-    Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
-    end,
-})
+MiscTab:Button("UI Designer: Midnight UI Team", function()
+    setclipboard("https://discord.gg/midnight-hub")
+end)
 
--- Set toggle key bind
-Rayfield:BindToClose(Enum.KeyCode.RightControl)
+MiscTab:Button("Destroy GUI", function()
+    Library:Destroy()
+end)
+
+MiscTab:Button("Rejoin Game", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+end)
+
+-- Set Keybind
+Library:Keybind("RightControl")

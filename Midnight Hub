@@ -30,14 +30,14 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
-local PetsTab = Window:MakeTab({
-    Name = "Pets",
+local AutofarmTab = Window:MakeTab({
+    Name = "Autofarm",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
-local ChestsTab = Window:MakeTab({
-    Name = "Chests & Crystals",
+local CrystalTab = Window:MakeTab({
+    Name = "Crystals",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
@@ -48,7 +48,7 @@ local SettingsTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- Functions
+-- Enhanced Functions
 local function CollectOrbs(orbType, area)
     if ReplicatedStorage and ReplicatedStorage:FindFirstChild("rEvents") and ReplicatedStorage.rEvents:FindFirstChild("orbEvent") then
         local args = {
@@ -61,7 +61,7 @@ local function CollectOrbs(orbType, area)
 end
 
 local function AutoCollectAllOrbs()
-    local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
+    local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb", "Gem"}
     local areas = {"City", "Snow City", "Magma City", "Desert"}
     
     for _, area in ipairs(areas) do
@@ -73,31 +73,7 @@ local function AutoCollectAllOrbs()
     end
 end
 
-local function AutoCollectGems()
-    local areas = {"City", "Snow City", "Magma City", "Desert"}
-    for _, area in ipairs(areas) do
-        task.spawn(function()
-            CollectOrbs("Gem", area)
-        end)
-    end
-end
-
--- New Remote Functions
-local function TravelToArea()
-    local args = {
-        [1] = "travelToArea",
-        [2] = workspace.areaCircles.areaCircle
-    }
-    ReplicatedStorage.rEvents.areaTravelRemote:InvokeServer(unpack(args))
-end
-
-local function CollectRewardChest()
-    local args = {
-        [1] = workspace.rewardChests.rewardChest
-    }
-    ReplicatedStorage.rEvents.collectCourseChestRemote:InvokeServer(unpack(args))
-end
-
+-- Crystal Opening Function
 local function OpenCrystal(crystalType)
     local args = {
         [1] = "openCrystal",
@@ -106,44 +82,41 @@ local function OpenCrystal(crystalType)
     ReplicatedStorage.rEvents.openCrystalRemote:InvokeServer(unpack(args))
 end
 
-local function CheckChest(chestType)
-    local args = {
-        [1] = chestType
-    }
-    ReplicatedStorage.rEvents.checkChestRemote:InvokeServer(unpack(args))
-end
-
 -- Main Tab
-local FarmingSection = MainTab:AddSection({
-    Name = "Farming"
+local MainSection = MainTab:AddSection({
+    Name = "Main Features"
 })
 
--- Auto Collect Orbs
-FarmingSection:AddToggle({
-    Name = "Auto Collect All Orbs",
+MainSection:AddToggle({
+    Name = "Auto Collect All",
     Default = false,
     Callback = function(Value)
-        getgenv().AutoOrbs = Value
-        while getgenv().AutoOrbs and task.wait() do
+        getgenv().AutoCollectAll = Value
+        while getgenv().AutoCollectAll and task.wait() do
             pcall(AutoCollectAllOrbs)
         end
     end
 })
 
--- Auto Collect Gems
-FarmingSection:AddToggle({
-    Name = "Auto Collect Gems",
+MainSection:AddToggle({
+    Name = "Auto Rebirth",
     Default = false,
     Callback = function(Value)
-        getgenv().AutoGems = Value
-        while getgenv().AutoGems and task.wait() do
-            pcall(AutoCollectGems)
+        getgenv().AutoRebirth = Value
+        while getgenv().AutoRebirth and task.wait(0.5) do
+            pcall(function()
+                ReplicatedStorage.rEvents.rebirthEvent:FireServer("rebirthRequest")
+            end)
         end
     end
 })
 
--- Safe Hoops Farm
-FarmingSection:AddToggle({
+-- Autofarm Tab
+local AutofarmSection = AutofarmTab:AddSection({
+    Name = "Farming Features"
+})
+
+AutofarmSection:AddToggle({
     Name = "Safe Hoops Farm",
     Default = false,
     Callback = function(Value)
@@ -166,8 +139,7 @@ FarmingSection:AddToggle({
     end
 })
 
--- Fast Hoops
-FarmingSection:AddToggle({
+AutofarmSection:AddToggle({
     Name = "Fast Hoops Farm",
     Default = false,
     Callback = function(Value)
@@ -184,105 +156,54 @@ FarmingSection:AddToggle({
     end
 })
 
--- Auto Rebirth
-FarmingSection:AddToggle({
-    Name = "Auto Rebirth",
-    Default = false,
-    Callback = function(Value)
-        getgenv().AutoRebirth = Value
-        while getgenv().AutoRebirth and task.wait(0.5) do
-            pcall(function()
-                ReplicatedStorage.rEvents.rebirthEvent:FireServer("rebirthRequest")
-            end)
-        end
-    end
+-- Crystal Tab
+local CrystalSection = CrystalTab:AddSection({
+    Name = "Crystal Opening"
 })
 
--- Chests & Crystals Tab
-local ChestsSection = ChestsTab:AddSection({
-    Name = "Chests and Crystals"
-})
-
--- Auto Check Chests
-ChestsSection:AddToggle({
-    Name = "Auto Check Chests",
-    Default = false,
-    Callback = function(Value)
-        getgenv().AutoCheckChests = Value
-        while getgenv().AutoCheckChests and task.wait(1) do
-            pcall(function()
-                CheckChest("Magma Chest")
-                CheckChest("Enchanted Chest")
-                CheckChest("Golden Chest")
-            end)
-        end
-    end
-})
-
--- Auto Open Crystals
-ChestsSection:AddToggle({
-    Name = "Auto Open Crystals",
-    Default = false,
-    Callback = function(Value)
-        getgenv().AutoOpenCrystals = Value
-        while getgenv().AutoOpenCrystals and task.wait(1) do
-            pcall(function()
-                OpenCrystal("Lightning Crystal")
-                OpenCrystal("Blue Crystal")
-            end)
-        end
-    end
-})
-
--- Auto Collect Reward Chests
-ChestsSection:AddToggle({
-    Name = "Auto Collect Reward Chests",
-    Default = false,
-    Callback = function(Value)
-        getgenv().AutoCollectRewards = Value
-        while getgenv().AutoCollectRewards and task.wait(1) do
-            pcall(CollectRewardChest)
-        end
-    end
-})
-
--- Pets Tab
-local PetsSection = PetsTab:AddSection({
-    Name = "Auto Buy Eggs"
-})
-
-local eggTypes = {
-    "Basic Egg",
-    "Rare Egg",
-    "Epic Egg",
-    "Legendary Egg",
-    "Premium Egg"
+local crystalTypes = {
+    "Red Crystal",
+    "Blue Crystal",
+    "Purple Crystal",
+    "Lightning Crystal",
+    "Dark Crystal",
+    "Inferno Crystal",
+    "Rainbow Crystal",
+    "Space Crystal"
 }
 
-PetsSection:AddDropdown({
-    Name = "Select Egg",
-    Default = "Basic Egg",
-    Options = eggTypes,
+CrystalSection:AddDropdown({
+    Name = "Select Crystal",
+    Default = "Blue Crystal",
+    Options = crystalTypes,
     Callback = function(Value)
-        getgenv().SelectedEgg = Value
+        getgenv().SelectedCrystal = Value
     end
 })
 
-PetsSection:AddToggle({
-    Name = "Auto Buy Selected Egg",
+CrystalSection:AddToggle({
+    Name = "Auto Open Selected Crystal",
     Default = false,
     Callback = function(Value)
-        getgenv().AutoBuyEgg = Value
-        while getgenv().AutoBuyEgg and task.wait(1) do
-            if getgenv().SelectedEgg then
+        getgenv().AutoOpenCrystal = Value
+        while getgenv().AutoOpenCrystal and task.wait(1) do
+            if getgenv().SelectedCrystal then
                 pcall(function()
-                    local args = {
-                        [1] = "purchaseEgg",
-                        [2] = getgenv().SelectedEgg
-                    }
-                    ReplicatedStorage.rEvents.eggEvent:FireServer(unpack(args))
+                    OpenCrystal(getgenv().SelectedCrystal)
                 end)
             end
+        end
+    end
+})
+
+CrystalSection:AddButton({
+    Name = "Open All Crystal Types Once",
+    Callback = function()
+        for _, crystalType in ipairs(crystalTypes) do
+            pcall(function()
+                OpenCrystal(crystalType)
+                task.wait(0.5)
+            end)
         end
     end
 })

@@ -10,6 +10,19 @@ local Character = Player.Character or Player.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
+-- Platform Creation Function
+local function CreateFarmPlatform()
+    local platform = Instance.new("Part")
+    platform.Name = "FarmPlatform"
+    platform.Size = Vector3.new(10, 1, 10)
+    platform.Anchored = true
+    platform.CanCollide = true
+    platform.Transparency = 0.5
+    platform.Position = Vector3.new(0, 500, 0) -- High up in the sky
+    platform.Parent = workspace
+    return platform
+end
+
 -- UI Library
 local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
@@ -95,7 +108,7 @@ FarmingSection:AddToggle({
     end
 })
 
--- Auto Collect Gems (Separated)
+-- Auto Collect Gems
 FarmingSection:AddToggle({
     Name = "Auto Collect Gems",
     Default = false,
@@ -107,33 +120,50 @@ FarmingSection:AddToggle({
     end
 })
 
--- Safe Auto Hoops
+-- Safe Hoops Farm (Sky Platform Method)
 FarmingSection:AddToggle({
-    Name = "Safe Auto Hoops",
+    Name = "Safe Hoops Farm (Sky)",
     Default = false,
     Callback = function(Value)
-        getgenv().SafeAutoHoops = Value
-        while getgenv().SafeAutoHoops and task.wait(0.3) do
+        getgenv().SafeHoopsSky = Value
+        
+        -- Platform handling
+        local farmPlatform = workspace:FindFirstChild("FarmPlatform")
+        if Value and not farmPlatform then
+            farmPlatform = CreateFarmPlatform()
+        end
+        
+        -- Teleport to platform
+        if Value then
+            HumanoidRootPart.CFrame = CFrame.new(0, 505, 0) -- Slightly above platform
+        end
+        
+        -- Start farming
+        while getgenv().SafeHoopsSky and task.wait(0.3) do
             pcall(function()
                 for _, hoop in pairs(workspace.Hoops:GetChildren()) do
-                    if hoop:IsA("BasePart") then
-                        -- Only teleport one hoop at a time with delay
+                    if hoop:IsA("BasePart") and getgenv().SafeHoopsSky then
                         hoop.CFrame = HumanoidRootPart.CFrame
-                        task.wait(0.3) -- Safe delay between hoops
+                        task.wait(0.3)
                     end
                 end
             end)
         end
+        
+        -- Cleanup when disabled
+        if not Value and farmPlatform then
+            farmPlatform:Destroy()
+        end
     end
 })
 
--- Fast Auto Hoops
+-- Fast Hoops
 FarmingSection:AddToggle({
-    Name = "Fast Auto Hoops",
+    Name = "Fast Hoops Farm",
     Default = false,
     Callback = function(Value)
-        getgenv().FastAutoHoops = Value
-        while getgenv().FastAutoHoops and task.wait(0.1) do
+        getgenv().FastHoops = Value
+        while getgenv().FastHoops and task.wait(0.1) do
             pcall(function()
                 for _, hoop in pairs(workspace.Hoops:GetChildren()) do
                     if hoop:IsA("BasePart") then
@@ -204,6 +234,8 @@ local SettingsSection = SettingsTab:AddSection({
 SettingsSection:AddButton({
     Name = "Destroy GUI",
     Callback = function()
+        local platform = workspace:FindFirstChild("FarmPlatform")
+        if platform then platform:Destroy() end
         OrionLib:Destroy()
     end
 })

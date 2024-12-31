@@ -1,4 +1,4 @@
-local VLib = loadstring(game:HttpGet("https://gitlab.com/L1ZOT/test-project/-/raw/main/PJM-GUI"))()
+local VLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/Chaosscripter/Riotscripter/main/Dark%20Dex%20V7%22))()"))()
 local Win = VLib:Window("Midnight Hub", "Speed of Legends")
 local Main = Win:Tab("Main")
 local Autofarm = Win:Tab("Autofarm")

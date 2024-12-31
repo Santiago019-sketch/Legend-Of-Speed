@@ -4,16 +4,11 @@ local Main = Win:Tab("Main")
 local Autofarm = Win:Tab("Autofarm")
 local Credits = Win:Tab("Credits")
 
--- GUI toggle setup
+-- Toggle Button to Show/Hide GUI
 local guiVisible = true
-local toggleKey = Enum.KeyCode.RightShift -- Change this key if needed
-
-game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == toggleKey then
-        guiVisible = not guiVisible
-        Win.Frame.Visible = guiVisible
-    end
+Main:Button("Toggle GUI", function()
+    guiVisible = not guiVisible
+    Win.Frame.Visible = guiVisible
 end)
 
 if not game.Workspace:FindFirstChild("MidnightHubPart") then
@@ -34,17 +29,16 @@ Main:Slider("JumpPower", 0, 250, 50, function(v)
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
 end)
 
-Autofarm:Toggle("Auto Steps", false, function(t)
+-- Orb Farming with All Orb Types
+Autofarm:Toggle("Auto Steps (All Orbs)", false, function(t)
     getgenv().Autostep = t
     while wait() do
         if getgenv().Autostep then
             pcall(function()
-                for i = 1, 20 do
-                    local orbs = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
-                    for _, orb in ipairs(orbs) do
-                        local args = {"collectOrb", orb, "City"}
-                        game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
-                    end
+                local orbs = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
+                for _, orb in ipairs(orbs) do
+                    local args = {"collectOrb", orb, "City"}
+                    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
                 end
             end)
         end

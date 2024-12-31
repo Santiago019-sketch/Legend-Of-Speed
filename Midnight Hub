@@ -1,62 +1,107 @@
+-- Load UI Library
 local VLib = loadstring(game:HttpGet("https://gitlab.com/L1ZOT/test-project/-/raw/main/PJM-GUI"))()
+
+-- Create Window and Tabs
 local Win = VLib:Window("Midnight Hub", "Speed of Legends")
 local Main = Win:Tab("Main")
 local Autofarm = Win:Tab("Autofarm")
 local Credits = Win:Tab("Credits")
 
--- Toggle Button to Show/Hide GUI
+-- Create Toggle Key UI
+local ScreenGui = Instance.new("ScreenGui")
+local ToggleFrame = Instance.new("Frame")
+local ToggleButton = Instance.new("TextButton")
+
+-- Configure Toggle Key UI
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "MidnightHubToggle"
+
+ToggleFrame.Name = "ToggleFrame"
+ToggleFrame.Parent = ScreenGui
+ToggleFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+ToggleFrame.Position = UDim2.new(0, 0, 0.5, -10)
+ToggleFrame.Size = UDim2.new(0, 100, 0, 20)
+
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Parent = ToggleFrame
+ToggleButton.BackgroundColor3 = Color3.fromRGB(55, 55, 55)
+ToggleButton.Size = UDim2.new(1, 0, 1, 0)
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Text = "Toggle GUI"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 14.000
+
+-- GUI Toggle Function
 local guiVisible = true
-Main:Button("Toggle GUI", function()
+ToggleButton.MouseButton1Click:Connect(function()
     guiVisible = not guiVisible
     Win.Frame.Visible = guiVisible
 end)
 
+-- Create Platform
 if not game.Workspace:FindFirstChild("MidnightHubPart") then
     local MidnightHubPart = Instance.new("Part")
     MidnightHubPart.Name = "MidnightHubPart"
     MidnightHubPart.Parent = game.Workspace
     MidnightHubPart.Anchored = true
-    MidnightHubPart.Transparency = 0
-    MidnightHubPart.Size = Vector3.new(30, -0.5, 30)
+    MidnightHubPart.Transparency = 0.5
+    MidnightHubPart.Size = Vector3.new(30, 1, 30)
     MidnightHubPart.Position = Vector3.new(-543.452, 2873.2, 324.647)
+    MidnightHubPart.BrickColor = BrickColor.new("Really black")
 end
 
-Main:Slider("WalkSpeed", 0, 250, 16, function(v)
+-- Main Tab Features
+Main:Slider("WalkSpeed", 16, 500, 16, function(v)
     game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
 end)
 
-Main:Slider("JumpPower", 0, 250, 50, function(v)
+Main:Slider("JumpPower", 50, 500, 50, function(v)
     game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
 end)
 
--- Orb Farming with All Orb Types
-Autofarm:Toggle("Auto Steps (All Orbs)", false, function(t)
-    getgenv().Autostep = t
-    while wait() do
-        if getgenv().Autostep then
+-- Orb Collection Function
+local function collectOrb(orbType, location)
+    local args = {
+        "collectOrb",
+        orbType,
+        location
+    }
+    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+end
+
+-- Enhanced Autofarm Features
+Autofarm:Toggle("Auto Collect All Orbs", false, function(t)
+    getgenv().AutoCollectOrbs = t
+    while wait(0.1) do
+        if getgenv().AutoCollectOrbs then
             pcall(function()
-                local orbs = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
-                for _, orb in ipairs(orbs) do
-                    local args = {"collectOrb", orb, "City"}
-                    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+                local orbTypes = {
+                    "Yellow Orb",
+                    "Orange Orb",
+                    "Red Orb",
+                    "Blue Orb"
+                }
+                local locations = {"City", "Desert", "Magma City"}
+                
+                for _, location in ipairs(locations) do
+                    for _, orbType in ipairs(orbTypes) do
+                        collectOrb(orbType, location)
+                    end
                 end
             end)
         end
     end
 end)
 
-Autofarm:Toggle("Auto collect gems", false, function(t)
+Autofarm:Toggle("Auto Collect Gems", false, function(t)
+    getgenv().AutoCollectGems = t
     spawn(function()
-        getgenv().AutocollectDiamonds = t
-        while wait() do
-            if getgenv().AutocollectDiamonds then
+        while wait(0.1) do
+            if getgenv().AutoCollectGems then
                 pcall(function()
-                    for i = 1, 10 do
-                        local locations = {"City", "Desert", "Magma City"}
-                        for _, location in ipairs(locations) do
-                            local args = {"collectOrb", "Gem", location}
-                            game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
-                        end
+                    local locations = {"City", "Desert", "Magma City"}
+                    for _, location in ipairs(locations) do
+                        collectOrb("Gem", location)
                     end
                 end)
             end
@@ -64,69 +109,74 @@ Autofarm:Toggle("Auto collect gems", false, function(t)
     end)
 end)
 
-Autofarm:Toggle("Hops Farm", false, function(t)
-    getgenv().Autohops = t
+-- Enhanced Hoops Farm
+Autofarm:Toggle("Fast Hoops Farm", false, function(t)
+    getgenv().FastHoopsFarm = t
     while wait() do
-        if getgenv().Autohops then
-            for _, v in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
-                v.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-            end
-        end
-    end
-end)
-
-Autofarm:Toggle("Safe Hops Farm", false, function(t)
-    HoopsFarm = t
-end)
-
-spawn(function()
-    while wait() do
-        if HoopsFarm then
+        if getgenv().FastHoopsFarm then
             pcall(function()
-                for _, v in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
-                    v.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-                    wait(0.3)
+                for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
+                    hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                 end
             end)
         end
     end
 end)
 
-Autofarm:Toggle("AutoRebirth", false, function(t)
+Autofarm:Toggle("Safe Hoops Farm", false, function(t)
+    getgenv().SafeHoopsFarm = t
     spawn(function()
-        getgenv().AutoRebirth = t
-        while wait() do
-            if getgenv().AutoRebirth then
+        while wait(0.3) do
+            if getgenv().SafeHoopsFarm then
                 pcall(function()
-                    local args = {"rebirthRequest"}
-                    game:GetService("ReplicatedStorage").rEvents.rebirthEvent:FireServer(unpack(args))
+                    for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
+                        hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+                        wait(0.3)
+                    end
                 end)
             end
         end
     end)
 end)
 
-Autofarm:Button("Collect Chests", function()
-    local args = {"groupRewards"}
-    game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(args))
-
-    args = {"Enchanted Chest"}
-    game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(args))
-    wait()
-
-    args = {workspace.rewardChests.rewardChest}
-    game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(args))
+-- Auto Rebirth
+Autofarm:Toggle("Auto Rebirth", false, function(t)
+    getgenv().AutoRebirth = t
+    spawn(function()
+        while wait(0.5) do
+            if getgenv().AutoRebirth then
+                pcall(function()
+                    game:GetService("ReplicatedStorage").rEvents.rebirthEvent:FireServer("rebirthRequest")
+                end)
+            end
+        end
+    end)
 end)
 
-Credits:Button("Lead Developers: Midnight Dev Team", function()
-    setclipboard("https://discord.gg/midnight-hub")
+-- Chest Collection
+Autofarm:Button("Collect All Chests", function()
+    local chestTypes = {
+        {"groupRewards"},
+        {"Enchanted Chest"},
+        {workspace.rewardChests.rewardChest}
+    }
+    
+    for _, chest in ipairs(chestTypes) do
+        pcall(function()
+            if chest[1] == "groupRewards" then
+                game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(chest))
+            elseif chest[1] == "Enchanted Chest" then
+                game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(chest))
+            else
+                game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(chest))
+            end
+        end)
+        wait(0.1)
+    end
 end)
 
-Credits:Button("UI Designer: Midnight UI Team", function()
-    setclipboard("https://discord.gg/midnight-hub")
-end)
-
-Credits:Button("Midnight Hub Discord Server", function()
+-- Credits Tab
+Credits:Button("Join Discord", function()
     setclipboard("https://discord.gg/midnight-hub")
     local req = (syn and syn.request) or (http and http.request) or http_request
     if req then
@@ -146,13 +196,21 @@ Credits:Button("Midnight Hub Discord Server", function()
     end
 end)
 
+Credits:Button("Lead Developers: Midnight Dev Team", function()
+    setclipboard("https://discord.gg/midnight-hub")
+end)
+
+Credits:Button("UI Designer: Midnight UI Team", function()
+    setclipboard("https://discord.gg/midnight-hub")
+end)
+
 Credits:line()
-Credits:Button("Destroy Gui", function()
+
+Credits:Button("Destroy GUI", function()
+    ScreenGui:Destroy()
     game.CoreGui:FindFirstChild("woof"):Destroy()
 end)
 
-Credits:Button("Rejoin", function()
-    local ts = game:GetService("TeleportService")
-    local p = game:GetService("Players").LocalPlayer
-    ts:Teleport(game.PlaceId, p)
+Credits:Button("Rejoin Game", function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
 end)

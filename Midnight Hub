@@ -1,80 +1,161 @@
--- Load Rayfield Library
-local Rayfield = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Rayfield/main/source"))()
-if not Rayfield then
-    warn("Failed to load Rayfield Library.")
-    return
+local VLib = loadstring(game:HttpGet("https://gitlab.com/L1ZOT/test-project/-/raw/main/PJM-GUI"))()
+local Win = VLib:Window("Midnight Hub", "Speed of Legends")
+local Main = Win:Tab("Main")
+local Autofarm = Win:Tab("Autofarm")
+local Credits = Win:Tab("Credits")
+
+if not game.Workspace:FindFirstChild("MidnightHubPart") then
+    local MidnightHubPart = Instance.new("Part")
+    MidnightHubPart.Name = "MidnightHubPart"
+    MidnightHubPart.Parent = game.Workspace
+    MidnightHubPart.Anchored = true
+    MidnightHubPart.Transparency = 0
+    MidnightHubPart.Size = Vector3.new(30, -0.5, 30)
+    MidnightHubPart.Position = Vector3.new(-543.452, 2873.2, 324.647)
 end
 
--- Create the GUI window
-local Window = Rayfield:CreateWindow({
-    Name = "Farming GUI",
-    LoadingTitle = "Loading Farming GUI",
-    LoadingSubtitle = "By YourNameHere",
-    ConfigurationSaving = { Enabled = false }, -- Disable if not saving configuration
-    KeySystem = false, -- Disable key system
-})
+Main:Slider("WalkSpeed", 0, 250, 16, function(v)
+    game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = v
+end)
 
--- Create Farming Tab and Section
-local MainTab = Window:CreateTab("Farming", 4483362458) -- Replace with desired icon ID
-local FarmingSection = MainTab:CreateSection("Orb Farming")
+Main:Slider("JumpPower", 0, 250, 50, function(v)
+    game.Players.LocalPlayer.Character.Humanoid.JumpPower = v
+end)
 
--- Variables to control toggles
-local isYellowOrbFarming = false
-local isRedOrbFarming = false
-
--- Function to handle farming orbs
-local function farmOrbs(orbType, location, count)
-    for i = 1, count do
-        local success, err = pcall(function()
-            game:GetService('ReplicatedStorage').rEvents.orbEvent:FireServer("collectOrb", orbType, location)
-        end)
-        if not success then
-            warn("Error firing event for " .. orbType .. ": " .. err)
+Autofarm:Toggle("Auto Steps", false, function(t)
+    getgenv().Autostep = t
+    while wait() do
+        if getgenv().Autostep then
+            pcall(function()
+                for i = 1, 20 do
+                    local args = {"collectOrb", "Red Orb", "City"}
+                    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+                    args[2] = "Blue Orb"
+                    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+                end
+            end)
         end
-        wait(0.3) -- Prevent spamming requests
     end
-end
+end)
 
--- Create Orb Farm Toggles
-FarmingSection:CreateToggle({
-    Name = "Yellow Orb Farm",
-    CurrentValue = false,
-    Callback = function(state)
-        isYellowOrbFarming = state
-        spawn(function()
-            while isYellowOrbFarming do
-                farmOrbs("Yellow Orb", "City", 15)
-                wait(1) -- Add delay to prevent potential overload
+Autofarm:Toggle("Auto collect gems", false, function(t)
+    spawn(function()
+        getgenv().AutocollectDiamonds = t
+        while wait() do
+            if getgenv().AutocollectDiamonds then
+                pcall(function()
+                    for i = 1, 10 do
+                        local locations = {"City", "Desert", "Magma City"}
+                        for _, location in ipairs(locations) do
+                            local args = {"collectOrb", "Gem", location}
+                            game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+                        end
+                    end
+                end)
             end
-        end)
-    end,
-})
+        end
+    end)
+end)
 
-FarmingSection:CreateToggle({
-    Name = "Red Desert Orb Farm",
-    CurrentValue = false,
-    Callback = function(state)
-        isRedOrbFarming = state
-        spawn(function()
-            while isRedOrbFarming do
-                farmOrbs("Red Orb", "Desert", 7)
-                wait(1) -- Add delay to prevent potential overload
+Autofarm:Toggle("Hops Farm", false, function(t)
+    getgenv().Autohops = t
+    while wait() do
+        if getgenv().Autohops then
+            for _, v in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
+                v.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
             end
-        end)
-    end,
-})
+        end
+    end
+end)
 
--- Create Farm Buttons
-FarmingSection:CreateButton({
-    Name = "Farm Steps (7500x)",
-    Callback = function()
-        farmOrbs("Red Orb", "City", 7500)
-    end,
-})
+Autofarm:Toggle("Safe Hops Farm", false, function(t)
+    HoopsFarm = t
+end)
 
-FarmingSection:CreateButton({
-    Name = "Farm Gems (1000x)",
-    Callback = function()
-        farmOrbs("Gem", "City", 1000)
-    end,
-})
+spawn(function()
+    while wait() do
+        if HoopsFarm then
+            pcall(function()
+                for _, v in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
+                    v.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+                    wait(0.3)
+                end
+            end)
+        end
+    end
+end)
+
+spawn(function()
+    while wait(0.3) do
+        if HoopsFarm then
+            pcall(function()
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(-547.52026, 2893.19995, 327.647003)
+            end)
+        end
+    end
+end)
+
+Autofarm:Toggle("AutoRebirth", false, function(t)
+    spawn(function()
+        getgenv().AutoRebirth = t
+        while wait() do
+            if getgenv().AutoRebirth then
+                pcall(function()
+                    local args = {"rebirthRequest"}
+                    game:GetService("ReplicatedStorage").rEvents.rebirthEvent:FireServer(unpack(args))
+                end)
+            end
+        end
+    end)
+end)
+
+Autofarm:Button("Collect Chests", function()
+    local args = {"groupRewards"}
+    game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(args))
+
+    args = {"Enchanted Chest"}
+    game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(args))
+    wait()
+
+    args = {workspace.rewardChests.rewardChest}
+    game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(args))
+end)
+
+Credits:Button("Lead Developers: Midnight Dev Team", function()
+    setclipboard("https://discord.gg/midnight-hub")
+end)
+
+Credits:Button("UI Designer: Midnight UI Team", function()
+    setclipboard("https://discord.gg/midnight-hub")
+end)
+
+Credits:Button("Midnight Hub Discord Server", function()
+    setclipboard("https://discord.gg/midnight-hub")
+    local req = (syn and syn.request) or (http and http.request) or http_request
+    if req then
+        req({
+            Url = 'http://127.0.0.1:6463/rpc?v=1',
+            Method = 'POST',
+            Headers = {
+                ['Content-Type'] = 'application/json',
+                Origin = 'https://discord.com'
+            },
+            Body = game:GetService('HttpService'):JSONEncode({
+                cmd = 'INVITE_BROWSER',
+                nonce = game:GetService('HttpService'):GenerateGUID(false),
+                args = {code = 'midnight-hub'}
+            })
+        })
+    end
+end)
+
+Credits:line()
+Credits:Button("Destroy Gui", function()
+    game.CoreGui:FindFirstChild("woof"):Destroy()
+end)
+
+Credits:Button("Rejoin", function()
+    local ts = game:GetService("TeleportService")
+    local p = game:GetService("Players").LocalPlayer
+    ts:Teleport(game.PlaceId, p)
+end)

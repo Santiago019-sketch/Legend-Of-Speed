@@ -1,288 +1,227 @@
-local OrionLib = loadstring(game:HttpGet(('https://github.com/Chaosscripter/Rayfield/tree/main')))()
-
--- Create Window
-local Window = OrionLib:MakeWindow({
-    Name = "Midnight Hub | Speed of Legends", 
-    HidePremium = false,
-    SaveConfig = true, 
-    IntroEnabled = true,
+-- Configuration
+local Config = {
+    WindowName = "Midnight Hub | Speed of Legends",
     IntroText = "Midnight Hub",
+    DiscordLink = "https://discord.gg/midnight-hub",
+    ToggleKey = Enum.KeyCode.RightControl
+}
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
+
+-- Load UI Library
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+
+-- Utility Functions
+local Utils = {}
+
+function Utils.SafeCallback(callback)
+    return function(...)
+        local success, result = pcall(callback, ...)
+        if not success then
+            warn("Callback error:", result)
+        end
+        return success, result
+    end
+end
+
+function Utils.CreateNotification(title, content, duration)
+    OrionLib:MakeNotification({
+        Name = title,
+        Content = content,
+        Image = "rbxassetid://4483345998",
+        Time = duration or 5
+    })
+end
+
+-- Main Window
+local Window = OrionLib:MakeWindow({
+    Name = Config.WindowName,
+    HidePremium = false,
+    SaveConfig = true,
+    IntroEnabled = true,
+    IntroText = Config.IntroText,
     ConfigFolder = "MidnightHub"
 })
 
--- Tabs
-local MainTab = Window:MakeTab({
-    Name = "Main",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+-- Farming Controller
+local FarmingController = {}
 
-local AutofarmTab = Window:MakeTab({
-    Name = "Autofarm",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-local MiscTab = Window:MakeTab({
-    Name = "Misc",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Main Section
-local MainSection = MainTab:AddSection({
-    Name = "Character Modifications"
-})
-
--- WalkSpeed Slider
-MainSection:AddSlider({
-    Name = "WalkSpeed",
-    Min = 16,
-    Max = 500,
-    Default = 16,
-    Color = Color3.fromRGB(255,255,255),
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = Value
-    end    
-})
-
--- JumpPower Slider
-MainSection:AddSlider({
-    Name = "JumpPower",
-    Min = 50,
-    Max = 500,
-    Default = 50,
-    Color = Color3.fromRGB(255,255,255),
-    Increment = 1,
-    ValueName = "Power",
-    Callback = function(Value)
-        game.Players.LocalPlayer.Character.Humanoid.JumpPower = Value
-    end    
-})
-
--- Autofarm Section
-local AutofarmSection = AutofarmTab:AddSection({
-    Name = "Orb Collection"
-})
-
--- Helper function for orb collection
-local function collectOrb(orbType, location)
-    local args = {
-        "collectOrb",
-        orbType,
-        location
-    }
-    game:GetService("ReplicatedStorage").rEvents.orbEvent:FireServer(unpack(args))
+function FarmingController.CollectOrb(orbType, location)
+    if ReplicatedStorage and ReplicatedStorage:FindFirstChild("rEvents") then
+        local args = {
+            "collectOrb",
+            orbType,
+            location
+        }
+        ReplicatedStorage.rEvents.orbEvent:FireServer(unpack(args))
+    end
 end
 
--- Auto Collect All Orbs
-AutofarmSection:AddToggle({
+function FarmingController.AutoCollectOrbs(enabled)
+    while enabled and task.wait(0.1) do
+        local success = pcall(function()
+            local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
+            local locations = {"City", "Desert", "Magma City"}
+            
+            for _, location in ipairs(locations) do
+                for _, orbType in ipairs(orbTypes) do
+                    FarmingController.CollectOrb(orbType, location)
+                end
+            end
+        end)
+        if not success then break end
+    end
+end
+
+-- Pet Controller
+local PetController = {}
+
+function PetController.BuyEgg(eggType)
+    if ReplicatedStorage and ReplicatedStorage:FindFirstChild("rEvents") then
+        local args = {
+            "purchaseEgg",
+            eggType
+        }
+        ReplicatedStorage.rEvents.eggEvent:FireServer(unpack(args))
+    end
+end
+
+function PetController.AutoBuyEggs(eggType, enabled)
+    while enabled and task.wait(1) do
+        pcall(function()
+            PetController.BuyEgg(eggType)
+        end)
+    end
+end
+
+-- Create Tabs
+local Tabs = {
+    Main = Window:MakeTab({
+        Name = "Main",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    }),
+    Pets = Window:MakeTab({
+        Name = "Pets",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    }),
+    Misc = Window:MakeTab({
+        Name = "Misc",
+        Icon = "rbxassetid://4483345998",
+        PremiumOnly = false
+    })
+}
+
+-- Main Tab Setup
+local MainSection = Tabs.Main:AddSection({
+    Name = "Farming"
+})
+
+MainSection:AddToggle({
     Name = "Auto Collect All Orbs",
     Default = false,
     Callback = function(Value)
         getgenv().AutoCollectOrbs = Value
-        while wait(0.1) and getgenv().AutoCollectOrbs do
-            pcall(function()
-                local orbTypes = {"Yellow Orb", "Orange Orb", "Red Orb", "Blue Orb"}
-                local locations = {"City", "Desert", "Magma City"}
-                
-                for _, location in ipairs(locations) do
-                    for _, orbType in ipairs(orbTypes) do
-                        collectOrb(orbType, location)
-                    end
-                end
-            end)
+        if Value then
+            coroutine.wrap(FarmingController.AutoCollectOrbs)(Value)
         end
-    end    
-})
-
--- Auto Collect Gems
-AutofarmSection:AddToggle({
-    Name = "Auto Collect Gems",
-    Default = false,
-    Callback = function(Value)
-        getgenv().AutoCollectGems = Value
-        spawn(function()
-            while wait(0.1) and getgenv().AutoCollectGems do
-                pcall(function()
-                    local locations = {"City", "Desert", "Magma City"}
-                    for _, location in ipairs(locations) do
-                        collectOrb("Gem", location)
-                    end
-                end)
-            end
-        end)
-    end    
+    end
 })
 
 -- Hoops Section
-local HoopsSection = AutofarmTab:AddSection({
+local HoopsSection = Tabs.Main:AddSection({
     Name = "Hoops Farm"
 })
 
--- Fast Hoops Farm
-HoopsSection:AddToggle({
-    Name = "Fast Hoops Farm",
-    Default = false,
-    Callback = function(Value)
-        getgenv().FastHoopsFarm = Value
-        while wait() and getgenv().FastHoopsFarm do
-            pcall(function()
-                for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
-                    hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-                end
-            end)
-        end
-    end    
-})
-
--- Safe Hoops Farm
 HoopsSection:AddToggle({
     Name = "Safe Hoops Farm",
     Default = false,
     Callback = function(Value)
         getgenv().SafeHoopsFarm = Value
-        spawn(function()
-            while wait(0.3) and getgenv().SafeHoopsFarm do
-                pcall(function()
-                    for _, hoop in pairs(game:GetService("Workspace").Hoops:GetChildren()) do
-                        hoop.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
-                        wait(0.3)
+        while Value and task.wait(0.3) do
+            pcall(function()
+                for _, hoop in pairs(workspace.Hoops:GetChildren()) do
+                    if hoop:IsA("BasePart") then
+                        hoop.CFrame = Players.LocalPlayer.Character.HumanoidRootPart.CFrame
                     end
-                end)
-            end
-        end)
-    end    
+                end
+            end)
+        end
+    end
 })
 
 -- Auto Rebirth Section
-local RebirthSection = AutofarmTab:AddSection({
+local RebirthSection = Tabs.Main:AddSection({
     Name = "Rebirth"
 })
 
--- Auto Rebirth
 RebirthSection:AddToggle({
     Name = "Auto Rebirth",
     Default = false,
     Callback = function(Value)
         getgenv().AutoRebirth = Value
-        spawn(function()
-            while wait(0.5) and getgenv().AutoRebirth do
-                pcall(function()
-                    game:GetService("ReplicatedStorage").rEvents.rebirthEvent:FireServer("rebirthRequest")
-                end)
-            end
-        end)
-    end    
-})
-
--- Chest Collection
-local ChestSection = AutofarmTab:AddSection({
-    Name = "Chest Collection"
-})
-
-ChestSection:AddButton({
-    Name = "Collect All Chests",
-    Callback = function()
-        local chestTypes = {
-            {"groupRewards"},
-            {"Enchanted Chest"},
-            {workspace.rewardChests.rewardChest}
-        }
-        
-        for _, chest in ipairs(chestTypes) do
+        while Value and task.wait(0.5) do
             pcall(function()
-                if chest[1] == "groupRewards" then
-                    game:GetService("ReplicatedStorage").rEvents.groupRemote:InvokeServer(unpack(chest))
-                elseif chest[1] == "Enchanted Chest" then
-                    game:GetService("ReplicatedStorage").rEvents.checkChestRemote:InvokeServer(unpack(chest))
-                else
-                    game:GetService("ReplicatedStorage").rEvents.collectCourseChestRemote:InvokeServer(unpack(chest))
-                end
+                ReplicatedStorage.rEvents.rebirthEvent:FireServer("rebirthRequest")
             end)
-            wait(0.1)
         end
-        OrionLib:MakeNotification({
-            Name = "Chest Collection",
-            Content = "All available chests collected!",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-    end    
+    end
 })
 
--- Misc Section
-local MiscSection = MiscTab:AddSection({
-    Name = "Links & Credits"
+-- Pets Tab Setup
+local PetsSection = Tabs.Pets:AddSection({
+    Name = "Auto Buy Eggs"
+})
+
+local eggTypes = {
+    "Basic Egg",
+    "Rare Egg",
+    "Ultra Egg",
+    "Desert Egg",
+    "Lava Egg"
+}
+
+PetsSection:AddDropdown({
+    Name = "Select Egg Type",
+    Default = "Basic Egg",
+    Options = eggTypes,
+    Callback = function(Value)
+        getgenv().SelectedEggType = Value
+    end
+})
+
+PetsSection:AddToggle({
+    Name = "Auto Buy Selected Egg",
+    Default = false,
+    Callback = function(Value)
+        getgenv().AutoBuyEggs = Value
+        if Value and getgenv().SelectedEggType then
+            coroutine.wrap(PetController.AutoBuyEggs)(getgenv().SelectedEggType, Value)
+        end
+    end
+})
+
+-- Misc Tab Setup
+local MiscSection = Tabs.Misc:AddSection({
+    Name = "Options"
 })
 
 MiscSection:AddButton({
-    Name = "Join Discord",
-    Callback = function()
-        setclipboard("https://discord.gg/midnight-hub")
-        OrionLib:MakeNotification({
-            Name = "Discord",
-            Content = "Discord link copied to clipboard!",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-        local req = (syn and syn.request) or (http and http.request) or http_request
-        if req then
-            req({
-                Url = 'http://127.0.0.1:6463/rpc?v=1',
-                Method = 'POST',
-                Headers = {
-                    ['Content-Type'] = 'application/json',
-                    Origin = 'https://discord.com'
-                },
-                Body = game:GetService('HttpService'):JSONEncode({
-                    cmd = 'INVITE_BROWSER',
-                    nonce = game:GetService('HttpService'):GenerateGUID(false),
-                    args = {code = 'midnight-hub'}
-                })
-            })
-        end
-    end    
-})
-
-MiscSection:AddButton({
-    Name = "Copy Discord Link",
-    Callback = function()
-        setclipboard("https://discord.gg/midnight-hub")
-        OrionLib:MakeNotification({
-            Name = "Discord",
-            Content = "Discord link copied to clipboard!",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-    end    
-})
-
-local CreditsSection = MiscTab:AddSection({
-    Name = "Credits"
-})
-
-CreditsSection:AddLabel("Lead Developers: Midnight Dev Team")
-CreditsSection:AddLabel("UI Designer: Midnight UI Team")
-
--- Settings Section
-local SettingsSection = MiscTab:AddSection({
-    Name = "Settings"
-})
-
-SettingsSection:AddButton({
     Name = "Destroy GUI",
     Callback = function()
         OrionLib:Destroy()
     end    
 })
 
-SettingsSection:AddButton({
+MiscSection:AddButton({
     Name = "Rejoin Game",
     Callback = function()
-        game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
+        TeleportService:Teleport(game.PlaceId, Players.LocalPlayer)
     end    
 })
 
@@ -290,9 +229,8 @@ SettingsSection:AddButton({
 OrionLib:Init()
 
 -- Set default toggle key to Right Control
-local UIS = game:GetService("UserInputService")
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.RightControl then
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Config.ToggleKey then
         OrionLib:ToggleUI()
     end
 end)
